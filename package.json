@@ -5,8 +5,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev:admin": "cd admin && npm run dev",
     "dev": "concurrently -n backend,frontend,admin -c green,yellow,cyan \"npm run start:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
-    "build:frontend": "cd frontend && npm run build",
-    "build:admin": "cd admin && npm run build",
+    "build:frontend": "npm --prefix frontend ci && npm --prefix frontend run build",
+    "build:admin": "npm --prefix admin ci && npm --prefix admin run build",
     "build": "concurrently -n frontend,admin -c yellow,cyan \"npm run build:frontend\" \"npm run build:admin\""
   },
   "dependencies": {
