@@ -16,13 +16,12 @@ import userRouter from './routes/usersRoute.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootEnvPath = path.resolve(__dirname, '../.env')
+const backendEnvPath = path.resolve(__dirname, './.env')
 
-// Try root .env first
+// Load root .env first
 dotenv.config({ path: rootEnvPath })
-// Fallback to backend/.env if root variables are missing
-if (!process.env.JWT_SECRET) {
-  dotenv.config()
-}
+// Then load backend/.env to fill any missing values without overriding existing ones
+dotenv.config({ path: backendEnvPath })
 
 // app config
 const app = express()
