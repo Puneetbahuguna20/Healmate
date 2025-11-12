@@ -32,7 +32,23 @@ connectCloudinary();
 // middleware
 app.use(express.json())
 // app.use(bodyParser.json());
-app.use(cors())
+// CORS: allow frontend origins and custom headers used by the app
+const allowedOrigins = [
+  process.env.CLIENT_ORIGIN,
+  'http://localhost:5173',
+  'http://localhost:5174'
+].filter(Boolean)
+
+app.use(
+  cors({
+    origin: allowedOrigins.length ? allowedOrigins : true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token'],
+    credentials: true,
+  })
+)
+// Preflight support
+app.options('*', cors())
 app.use(express.urlencoded({ extended: true }));
 
 
