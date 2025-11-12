@@ -19,10 +19,10 @@ const PrescriptionCard = ({ prescription }) => {
 
   const downloadPrescription = () => {
     if (prescription.prescriptionFile) {
-      // Create a temporary anchor element to force download
+      // Create a link to download the file
       const link = document.createElement('a');
       link.href = prescription.prescriptionFile;
-      link.setAttribute('download', `prescription_${prescription._id}.pdf`);
+      link.download = `prescription_${prescription._id}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -46,36 +46,14 @@ const PrescriptionCard = ({ prescription }) => {
       </div>
 
       {prescription.prescriptionType === 'text' || prescription.prescriptionType === 'both' ? (
-        <div className={`p-4 ${expanded ? 'max-h-full' : 'max-h-60 overflow-hidden relative'}`}>
-          <div className="mb-4">
-            {prescription.prescriptionText.includes('Medications:') ? (
-              <div>
-                {prescription.prescriptionText.split('\n').map((line, index) => {
-                  if (line.includes('Medications:')) {
-                    return (
-                      <div key={index} className="mt-2">
-                        <h4 className="font-medium text-gray-800">{line.split(':')[0]}:</h4>
-                        <p className="text-gray-700 ml-2">{line.split(':')[1]}</p>
-                      </div>
-                    );
-                  } else {
-                    return <p key={index} className="text-gray-700">{line}</p>;
-                  }
-                })}
-              </div>
-            ) : (
-              <pre className="whitespace-pre-wrap text-gray-700 font-sans">
-                {prescription.prescriptionText}
-              </pre>
-            )}
-          </div>
-          {!expanded && prescription.prescriptionText && prescription.prescriptionText.length > 100 && (
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
-          )}
-          {prescription.prescriptionText && prescription.prescriptionText.length > 100 && (
+        <div className={`p-4 ${expanded ? '' : 'max-h-32 overflow-hidden'}`}>
+          <pre className="whitespace-pre-wrap text-gray-700 font-sans">
+            {prescription.prescriptionText}
+          </pre>
+          {prescription.prescriptionText && prescription.prescriptionText.length > 200 && (
             <button
               onClick={toggleExpand}
-              className="text-blue-500 hover:text-blue-700 text-sm mt-2 focus:outline-none block w-full text-center"
+              className="text-blue-500 hover:text-blue-700 text-sm mt-2 focus:outline-none"
             >
               {expanded ? 'Show less' : 'Show more'}
             </button>
@@ -83,11 +61,11 @@ const PrescriptionCard = ({ prescription }) => {
         </div>
       ) : null}
 
-      <div className="p-4 bg-gray-50 flex justify-between items-center">
-        {prescription.prescriptionFile ? (
+      {prescription.prescriptionFile && (
+        <div className="p-4 bg-gray-50">
           <button
             onClick={downloadPrescription}
-            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors duration-200"
+            className="flex items-center text-blue-600 hover:text-blue-800"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -105,10 +83,8 @@ const PrescriptionCard = ({ prescription }) => {
             </svg>
             Download Prescription PDF
           </button>
-        ) : (
-          <span className="text-gray-500 italic">No PDF available</span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,8 +8,6 @@ import path from 'path';
  * @param {string} data.doctorName - Name of the doctor
  * @param {string} data.doctorSpeciality - Speciality of the doctor
  * @param {string} data.patientName - Name of the patient
- * @param {string} data.patientAge - Age of the patient (optional)
- * @param {string} data.treatment - Treatment description (optional)
  * @param {string} data.prescriptionText - Prescription text content
  * @param {Date} data.date - Date of prescription
  * @returns {Promise<string>} - Path to the generated PDF file
@@ -43,90 +41,37 @@ const generatePrescriptionPDF = (data) => {
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
       
-      // Add a header with doctor name and date
-      doc.fontSize(16).text(`Prescription from Dr. ${data.doctorName}`, { align: 'left' });
-      doc.fontSize(12).text(new Date(data.date).toLocaleDateString(), { align: 'right' });
-      doc.moveDown(0.5);
+      // Add a header with logo or clinic name
+      doc.fontSize(20).text('HealMate Medical Center', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(14).text('Medical Prescription', { align: 'center' });
+      doc.moveDown(2);
       
-      // Add doctor speciality
-      doc.fontSize(12).text(data.doctorSpeciality, { align: 'left' });
-      doc.moveDown(1);
+      // Add doctor information
+      doc.fontSize(12).text(`Doctor: ${data.doctorName}`, { continued: true });
+      doc.text(`Date: ${new Date(data.date).toLocaleDateString()}`, { align: 'right' });
+      doc.fontSize(10).text(`Speciality: ${data.doctorSpeciality}`);
+      doc.moveDown();
+      
+      // Add patient information
+      doc.fontSize(12).text(`Patient: ${data.patientName}`);
+      doc.moveDown(2);
       
       // Add a horizontal line
       doc.moveTo(50, doc.y)
          .lineTo(doc.page.width - 50, doc.y)
          .stroke();
-      doc.moveDown(1);
+      doc.moveDown();
       
-      // Add patient information
-      doc.fontSize(12).text(`Patient: ${data.patientName}`);
-      
-      // Add patient age if available
-      if (data.patientAge) {
-        doc.fontSize(12).text(`Age: ${data.patientAge}`);
-      }
-      
-      // Add treatment if available
-      if (data.treatment) {
-        doc.fontSize(12).text(`Treatment: ${data.treatment}`);
-      }
-      
-      doc.moveDown(1);
-      
-      // Parse and add medications if available
-      let medications = [];
-      let otherText = data.prescriptionText;
-      
-      if (data.prescriptionText.includes('Medications:')) {
-        const lines = data.prescriptionText.split('\n');
-        let medicationSection = false;
-        
-        for (const line of lines) {
-          if (line.includes('Medications:')) {
-            medicationSection = true;
-            medications.push(line);
-          } else if (medicationSection && line.trim()) {
-            medications.push(line);
-          }
-        }
-        
-        // Remove medications section from other text
-        otherText = lines.filter(line => !medications.includes(line)).join('\n');
-      }
-      
-      // Add medications section
-      if (medications.length > 0) {
-        doc.fontSize(14).text('Medications:', { underline: true });
-        doc.moveDown(0.5);
-        
-        medications.forEach((med, index) => {
-          if (index === 0 && med.includes('Medications:')) {
-            // Skip the "Medications:" header line
-            const medText = med.split(':')[1].trim();
-            if (medText) {
-              doc.fontSize(12).text(`• ${medText}`);
-            }
-          } else {
-            doc.fontSize(12).text(`• ${med.trim()}`);
-          }
-        });
-        
-        doc.moveDown(1);
-      }
-      
-      // Add other prescription content if any
-      if (otherText.trim()) {
-        doc.fontSize(12).text(otherText.trim());
-        doc.moveDown(1);
-      }
-      
-      // Add date
-      doc.fontSize(12).text(`Date: ${new Date(data.date).toLocaleDateString()}`);
+      // Add prescription content
+      doc.fontSize(12).text('Prescription:', { underline: true });
+      doc.moveDown();
+      doc.fontSize(10).text(data.prescriptionText);
       doc.moveDown(2);
       
       // Add a footer with signature
-      doc.fontSize(12).text('Doctor\'s Signature:', { align: 'right' });
-      doc.moveDown(0.5);
+      doc.fontSize(10).text('Doctor\'s Signature:', { align: 'right' });
+      doc.moveDown();
       doc.fontSize(12).text(data.doctorName, { align: 'right' });
       
       // Finalize the PDF

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors'
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import connectDB from './config/mongodb.js'
 import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRoute.js";
@@ -9,6 +11,18 @@ import userRouter from './routes/usersRoute.js';
 
 // app.use("/api/admin", adminRoutes);
 
+
+// Load environment variables from project root .env (with safe fallback)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const rootEnvPath = path.resolve(__dirname, '../.env')
+
+// Try root .env first
+dotenv.config({ path: rootEnvPath })
+// Fallback to backend/.env if root variables are missing
+if (!process.env.JWT_SECRET) {
+  dotenv.config()
+}
 
 // app config
 const app = express()

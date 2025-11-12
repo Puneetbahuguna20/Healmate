@@ -15,7 +15,6 @@ import DoctorsList from "./pages/Admin/DoctorsList";
 import { DoctorContext } from "./context/DontorContext";
 import DoctorDashboard from "./pages/Doctor/DoctorDashboard";
 import DoctorAppointmets from "./pages/Doctor/DoctorAppointments";
-import DoctorPrescriptions from "./pages/Doctor/DoctorPrescriptions";
 import DoctorProfile from "./pages/Doctor/DoctorProfile";
 import TopLoadingBar from "./components/TopLoadingBar";
 const App = () => {
@@ -45,7 +44,6 @@ const App = () => {
               path="/doctor-appointments"
               element={<DoctorAppointmets />}
             />
-            <Route path="/doctor-prescriptions" element={<DoctorPrescriptions />} />
             <Route path="/doctor-profile" element={<DoctorProfile />} />
           </Routes>
         </div>

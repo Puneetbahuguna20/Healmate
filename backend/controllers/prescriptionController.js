@@ -43,28 +43,13 @@ const addPrescription = async (req, res) => {
       prescriptionData.prescriptionType = "both";
     }
 
-    // Generate PDF from text if type is text only or both
-     if (prescriptionText && (prescriptionType === "text" || prescriptionType === "both")) {
+    // Generate PDF from text if type is text only
+     if (prescriptionText && prescriptionType === "text" && !req.file) {
        try {
-         // Parse prescription text to extract treatment and age if available
-         let patientAge = "";
-         let treatment = "";
-         
-         const lines = prescriptionText.split('\n');
-         for (const line of lines) {
-           if (line.includes('Age:')) {
-             patientAge = line.split(':')[1].trim();
-           } else if (line.includes('Treatment:')) {
-             treatment = line.split(':')[1].trim();
-           }
-         }
-         
          const pdfPath = await generatePrescriptionPDF({
            doctorName: doctorData.name,
            doctorSpeciality: doctorData.speciality,
            patientName: patientData.name,
-           patientAge,
-           treatment,
            prescriptionText,
            date: new Date(),
          });
@@ -95,28 +80,12 @@ const addPrescription = async (req, res) => {
   }
 };
 
-// Get prescriptions for doctor
+// Get prescriptions for a doctor
 const getDoctorPrescriptions = async (req, res) => {
   try {
     const docId = req.docId;
-    console.log("Doctor ID from request:", docId);
-    
-    // Find the doctor to get their name
-    const doctor = await doctorModel.findById(docId);
-    if (!doctor) {
-      return res.json({ success: false, message: "Doctor not found" });
-    }
-    
-    // Find prescriptions where doctorId matches OR doctorData.name matches
-    const prescriptions = await prescriptionModel.find({ 
-      $or: [
-        { doctorId: docId },
-        { "doctorData.name": doctor.name }
-      ]
-    });
-    
-    console.log(`Found ${prescriptions.length} prescriptions for doctor ${doctor.name}`);
-    
+    const prescriptions = await prescriptionModel.find({ doctorId: docId });
+
     res.json({ success: true, prescriptions });
   } catch (error) {
     console.log("error:", error);

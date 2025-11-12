@@ -1,6 +1,20 @@
 {
+  "private": true,
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev": "concurrently -n backend,frontend,admin -c green,yellow,cyan \"npm run start:backend\" \"npm run dev:frontend\" \"npm run dev:admin\"",
+    "build:frontend": "cd frontend && npm run build",
+    "build:admin": "cd admin && npm run build",
+    "build": "concurrently -n frontend,admin -c yellow,cyan \"npm run build:frontend\" \"npm run build:admin\""
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.4",
+    "dotenv": "^17.2.3",
     "tailwindcss": "^4.1.4"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
