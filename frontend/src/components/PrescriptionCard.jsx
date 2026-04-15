@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { format } from 'date-fns';
+import { AppContext } from '../context/AppContext';
 
 const PrescriptionCard = ({ prescription }) => {
   const [expanded, setExpanded] = useState(false);
+  const { backendUrl } = useContext(AppContext);
 
   const toggleExpand = () => {
     setExpanded(!expanded);
@@ -17,11 +19,40 @@ const PrescriptionCard = ({ prescription }) => {
     }
   };
 
+  // Build absolute file URL for viewing/downloading
+  const fileUrl = useMemo(() => {
+    if (!prescription?.prescriptionFile) return null;
+    const href = prescription.prescriptionFile.startsWith('http')
+      ? prescription.prescriptionFile
+      : `${backendUrl}${prescription.prescriptionFile}`;
+    return href;
+  }, [prescription?.prescriptionFile, backendUrl]);
+
+  // Parse structured fields from the text, if present
+  const parsedFields = useMemo(() => {
+    const text = prescription?.prescriptionText || '';
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const out = {};
+    lines.forEach(line => {
+      const idx = line.indexOf(':');
+      if (idx > -1) {
+        const key = line.slice(0, idx).toLowerCase();
+        const val = line.slice(idx + 1).trim();
+        if (key.includes('patient')) out.patient = val;
+        else if (key.includes('age')) out.age = val;
+        else if (key.includes('treatment')) out.treatment = val;
+        else if (key.includes('medications')) out.medications = val;
+        else if (key === 'date') out.date = val;
+      }
+    });
+    return out;
+  }, [prescription?.prescriptionText]);
+
   const downloadPrescription = () => {
-    if (prescription.prescriptionFile) {
+    if (fileUrl) {
       // Create a link to download the file
       const link = document.createElement('a');
-      link.href = prescription.prescriptionFile;
+      link.href = fileUrl;
       link.download = `prescription_${prescription._id}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -43,26 +74,37 @@ const PrescriptionCard = ({ prescription }) => {
         <p className="text-sm text-gray-600 mt-1">
           {prescription.doctorData?.speciality || 'Specialist'}
         </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-xs">
+          <div>
+            <p className="text-gray-500">PATIENT</p>
+            <p className="text-gray-900 font-medium">{parsedFields.patient || '-'}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">AGE</p>
+            <p className="text-gray-900 font-medium">{parsedFields.age || '-'}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">TREATMENT</p>
+            <p className="text-gray-900 font-medium">{parsedFields.treatment || '-'}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">MEDICATIONS</p>
+            <p className="text-gray-900 font-medium">{parsedFields.medications || '-'}</p>
+          </div>
+        </div>
       </div>
 
-      {prescription.prescriptionType === 'text' || prescription.prescriptionType === 'both' ? (
-        <div className={`p-4 ${expanded ? '' : 'max-h-32 overflow-hidden'}`}>
-          <pre className="whitespace-pre-wrap text-gray-700 font-sans">
-            {prescription.prescriptionText}
-          </pre>
-          {prescription.prescriptionText && prescription.prescriptionText.length > 200 && (
-            <button
-              onClick={toggleExpand}
-              className="text-blue-500 hover:text-blue-700 text-sm mt-2 focus:outline-none"
-            >
-              {expanded ? 'Show less' : 'Show more'}
-            </button>
-          )}
-        </div>
-      ) : null}
+      {/* Removed text preview block as requested */}
 
-      {prescription.prescriptionFile && (
+      {fileUrl && (
         <div className="p-4 bg-gray-50">
+          <div className="border rounded overflow-hidden mb-3">
+            <iframe
+              title={`Prescription ${prescription._id}`}
+              src={fileUrl}
+              className="w-full h-[360px]"
+            />
+          </div>
           <button
             onClick={downloadPrescription}
             className="flex items-center text-blue-600 hover:text-blue-800"

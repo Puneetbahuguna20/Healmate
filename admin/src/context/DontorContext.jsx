@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 export const DoctorContext = createContext();
 
 const DoctorContextProvider = (props) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
   const [dToken, setDToken] = useState(
     localStorage.getItem("dToken") ? localStorage.getItem("dToken") : ""
   );
@@ -19,7 +19,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.get(
         backendUrl + "/api/doctor/appointments",
         {
-          headers: { dToken },
+          headers: { dtoken: dToken },
         }
       );
       if (data.success) {
@@ -39,7 +39,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.post(
         backendUrl + "/api/doctor/complete-appointment",
         { appointmentId },
-        { headers: { dToken } }
+        { headers: { dtoken: dToken } }
       );
       console.log("data:", data);
       if (data.success) {
@@ -60,7 +60,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.post(
         backendUrl + "/api/doctor/cancel-appointment",
         { appointmentId },
-        { headers: { dToken } }
+        { headers: { dtoken: dToken } }
       );
       if (data.success) {
         getAppointments();
@@ -77,7 +77,7 @@ const DoctorContextProvider = (props) => {
   const getDashData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/doctor/dashboard", {
-        headers: { dToken },
+        headers: { dtoken: dToken },
       });
       if (data.success) {
         setDashData(data.dashData);
@@ -93,7 +93,7 @@ const DoctorContextProvider = (props) => {
   const getProfileData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/doctor/profile", {
-        headers: { dToken },
+        headers: { dtoken: dToken },
       });
       if (data.success) {
         setProfileData(data.profileData);
@@ -113,7 +113,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.get(
         backendUrl + "/api/doctor/prescriptions",
         {
-          headers: { dToken },
+          headers: { dtoken: dToken },
         }
       );
       if (data.success) {
@@ -133,7 +133,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.get(
         backendUrl + "/api/doctor/patient-prescriptions/" + patientId,
         {
-          headers: { dToken },
+          headers: { dtoken: dToken },
         }
       );
       if (data.success) {
@@ -157,7 +157,7 @@ const DoctorContextProvider = (props) => {
         formData,
         {
           headers: { 
-            dToken,
+            dtoken: dToken,
             "Content-Type": "multipart/form-data"
           },
         }
@@ -184,7 +184,7 @@ const DoctorContextProvider = (props) => {
       const { data } = await axios.get(
         backendUrl + "/api/doctor/prescription/" + prescriptionId,
         {
-          headers: { dToken },
+          headers: { dtoken: dToken },
         }
       );
       if (data.success) {

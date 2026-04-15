@@ -29,6 +29,12 @@ const port = process.env.PORT || 4000
 connectDB()
 connectCloudinary();
 
+// Ensure JWT secret exists in development to avoid login failures
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'dev_secret_key_change_me';
+  console.warn('⚠️ JWT_SECRET not set. Using a dev fallback secret. Set JWT_SECRET in your .env for production.')
+}
+
 // middleware
 app.use(express.json())
 // app.use(bodyParser.json());
@@ -36,20 +42,33 @@ app.use(express.json())
 const allowedOrigins = [
   process.env.CLIENT_ORIGIN,
   'http://localhost:5173',
-  'http://localhost:5174'
+  'http://localhost:5174',
+  'http://localhost:5178'
 ].filter(Boolean)
 
-app.use(
-  cors({
-    origin: allowedOrigins.length ? allowedOrigins : true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'token'],
-    credentials: true,
-  })
-)
-// Preflight support
-app.options('*', cors())
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g., curl, Postman) with no origin
+    if (!origin) return callback(null, true)
+
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    if (isLocalhost || allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    return callback(null, false)
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // Allow custom auth headers used by the app
+  allowedHeaders: ['Content-Type', 'Authorization', 'token', 'atoken', 'dtoken', 'x-api-key'],
+  credentials: true,
+  optionsSuccessStatus: 204,
+}
+
+app.use(cors(corsOptions))
+// Preflight for all routes (Express 5 + path-to-regexp v6 requires named wildcard)
+app.options('/*splat', cors(corsOptions))
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 
 

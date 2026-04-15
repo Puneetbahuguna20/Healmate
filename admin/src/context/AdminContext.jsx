@@ -16,7 +16,7 @@ const AdminContextProvider = (props) => {
   const getAllDoctors = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/admin/all-doctors", {
-        headers: { aToken },
+        headers: { atoken: aToken },
       });
       if (data.success) {
         console.log("data:", data);
@@ -34,7 +34,7 @@ const AdminContextProvider = (props) => {
       const { data } = await axios.post(
         backendUrl + "/api/admin/change-availability",
         { docId },
-        { headers: { aToken } }
+        { headers: { atoken: aToken } }
       );
 
       if (data.success) {
@@ -53,7 +53,7 @@ const AdminContextProvider = (props) => {
     console.log("getAllAppointments:");
     try {
       const { data } = await axios.get(backendUrl + "/api/admin/appointments", {
-        headers: { aToken },
+        headers: { atoken: aToken },
       });
       if (data.success) {
         setAppointments(data.appointments);
@@ -72,7 +72,7 @@ const AdminContextProvider = (props) => {
       const { data } = await axios.post(
         backendUrl + "/api/admin/cancel-appointment",
         { appointmentId },
-        { headers: { aToken } }
+        { headers: { atoken: aToken } }
       );
       if (data.success) {
         toast.success(data.message);
@@ -90,7 +90,7 @@ const AdminContextProvider = (props) => {
   const getDashData = async () => {
     try {
       const { data } = await axios.get(backendUrl + "/api/admin/dashboard", {
-        headers: { aToken },
+        headers: { atoken: aToken },
       });
       if (data.success) {
         console.log("data:", data);
@@ -103,7 +103,7 @@ const AdminContextProvider = (props) => {
       toast.error(error);
     }
   };
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
   const value = {
     aToken,
     setAToken,

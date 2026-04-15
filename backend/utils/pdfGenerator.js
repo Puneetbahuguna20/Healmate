@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Generate a PDF prescription from text
@@ -12,6 +13,9 @@ import path from 'path';
  * @param {Date} data.date - Date of prescription
  * @returns {Promise<string>} - Path to the generated PDF file
  */
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
 const generatePrescriptionPDF = (data) => {
   return new Promise((resolve, reject) => {
     try {
@@ -66,13 +70,33 @@ const generatePrescriptionPDF = (data) => {
       // Add prescription content
       doc.fontSize(12).text('Prescription:', { underline: true });
       doc.moveDown();
-      doc.fontSize(10).text(data.prescriptionText);
+      const rawText = String(data.prescriptionText || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '')
+        .replace(/\u00D0/g, '')
+        .trim();
+      const medsMatch = rawText.match(/Medications:\s*([^\n]*)/i);
+      const meds = medsMatch ? medsMatch[1].split(/[;,]+/).map(s => s.trim()).filter(Boolean) : [];
+      const cleanText = rawText.replace(/Medications:[^\n]*/i, '').trim();
+      if (cleanText) {
+        doc.fontSize(10).text(cleanText);
+        doc.moveDown();
+      }
+      if (meds.length) {
+        doc.fontSize(12).text('Medications:', { underline: true });
+        doc.moveDown(0.5);
+        meds.forEach(m => {
+          doc.fontSize(10).text(m);
+        });
+        doc.moveDown();
+      }
       doc.moveDown(2);
       
       // Add a footer with signature
-      doc.fontSize(10).text('Doctor\'s Signature:', { align: 'right' });
-      doc.moveDown();
-      doc.fontSize(12).text(data.doctorName, { align: 'right' });
+      const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const bottomY = doc.page.height - doc.page.margins.bottom - 60;
+      doc.fontSize(10).text('Doctor\'s Signature:', doc.page.margins.left, bottomY, { width, align: 'right' });
+      doc.fontSize(12).text(data.doctorName, doc.page.margins.left, bottomY + 20, { width, align: 'right' });
       
       // Finalize the PDF
       doc.end();

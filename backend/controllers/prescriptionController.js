@@ -32,7 +32,8 @@ const addPrescription = async (req, res) => {
       doctorId: docId,
       patientId: appointment.userId,
       prescriptionText: prescriptionText || "",
-      prescriptionFile: req.file ? req.file.filename : "",
+      // Normalize stored file path to include /uploads for static serving
+      prescriptionFile: req.file ? `/uploads/${req.file.filename}` : "",
       prescriptionType: prescriptionType || (req.file ? "file" : "text"),
       doctorData,
       patientData,
@@ -43,24 +44,36 @@ const addPrescription = async (req, res) => {
       prescriptionData.prescriptionType = "both";
     }
 
-    // Generate PDF from text if type is text only
-     if (prescriptionText && prescriptionType === "text" && !req.file) {
-       try {
-         const pdfPath = await generatePrescriptionPDF({
-           doctorName: doctorData.name,
-           doctorSpeciality: doctorData.speciality,
-           patientName: patientData.name,
-           prescriptionText,
-           date: new Date(),
-         });
-         
-         prescriptionData.prescriptionFile = pdfPath;
-         prescriptionData.prescriptionType = "both"; // Update type since we now have both text and PDF
-       } catch (pdfError) {
-         console.error("Error generating PDF:", pdfError);
-         // Continue without PDF if generation fails
-       }
-     }
+    // Always generate a PDF from text when provided, even if a file was uploaded
+    if (prescriptionText) {
+      // Extract full patient name from formatted text if present
+      const extractPatientName = (text) => {
+        try {
+          const match = String(text)
+            .split('\n')
+            .map((l) => l.trim())
+            .find((l) => l.toLowerCase().startsWith('patient:'))
+          if (!match) return ''
+          return match.split(':')[1].trim()
+        } catch { return '' }
+      }
+      const patientFullName = extractPatientName(prescriptionText) || patientData.name
+      try {
+        const pdfPath = await generatePrescriptionPDF({
+          doctorName: doctorData.name,
+          doctorSpeciality: doctorData.speciality,
+          patientName: patientFullName,
+          prescriptionText,
+          date: new Date(),
+        });
+        // If an uploaded file exists, keep it but prefer showing the generated PDF
+        // Store the generated PDF path; frontend shows embedded viewer + download
+        prescriptionData.prescriptionFile = pdfPath;
+        prescriptionData.prescriptionType = req.file ? "both" : "both";
+      } catch (pdfError) {
+        console.error("Error generating PDF:", pdfError);
+      }
+    }
 
     // Save prescription
     const newPrescription = new prescriptionModel(prescriptionData);
